@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TemplateSyntax</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p>{{ message }}</p>
+        <p>{{ number + 3 }}</p>
+        <p>{{ sayHi() }}</p>
+
+        <!-- vueで使用する属性をディレクティブという -->
+        <p v-text="message"></p>
+
+        <p v-once>{{ message }}</p>
+
+        <div v-html="html"></div>
+
+        <a v-bind:href="url">Google</a>
+        <a :[attribute]="url">Google</a>
+
+        <p>現在{{ counter }}回クリックされています</p>
+        <button v-on:click="countUp()">カウントアップ</button>
+        <p>{{ lessThanThree }}</p>
+
+        <!-- よく使うイベント修飾子はドットでつなげてstopなどとかける -->
+        <p v-on:mousemove="changeMousePosition">マウスを載せてください
+            <span v-on:mousemove.stop>反応しなでください</span>
+        </p>
+        <p>X:{{x}}, Y:{{y}}</p>
+
+        <input type="text" v-on:keyup.enter="myAlert">
+        <br>
+
+        <input type="text" v-model="modelMessage">
+        <h1>{{ modelMessage }}</h1>
+    </div>
+
+    <script>
+        new Vue({
+            el: "#app",
+            data: {
+                message: "HelloWorld",
+                number: 3,
+                html: '<h1>H1</h1>',
+                url: 'https://google.com',
+                attribute: 'href',
+                counter: 0,
+                x: 0,
+                y: 0,
+                modelMessage: '動的に変化します'
+            },
+            computed: {
+                lessThanThree: function () {
+                    return this.counter > 3 ? '3より上' : '3以下'
+                }
+            },
+            methods: {
+                sayHi: function () {
+                    return 'Hi';
+                },
+                countUp: function () {
+                    this.counter += 1
+                },
+                changeMousePosition: function (event) {
+                    this.x = event.clientX
+                    this.y = event.clientY
+                },
+                myAlert: function () {
+                    alert('アラート');
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
