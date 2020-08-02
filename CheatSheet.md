@@ -77,3 +77,27 @@ DOMイベント一覧：https://developer.mozilla.org/ja/docs/Web/Events
 
 - v-model...双方向バインディングを可能にする
 {{ message }}があって、dataにmessageを指定した場合、Vueインスタンス側からでしかmessageを変更することはできなかった。これをテンプレートHTML側から変更することができるのが双方向バインディングという
+
+
+## Rendering
+### templateタグの使い方
+複数の要素に対してv-ifで制御をかけたい場合、それらをtemplateタグで囲み、templateタグにv-ifをつけて制御する。
+templateタグはレンダリング後のHTMLに表示されない
+
+### ディレクティブ
+- v-if...値がTrueのときのみその要素が表示される
+- v-else...v-ifの直下にこの属性を持つものを書くことで、v-ifがFalseのときはこの要素を表示させる
+- v-else-if...v-ifの直下に書くことで、v-ifがfalseで別の条件で表示を切り替えたいときに使える
+- v-show...挙動はv-ifと同じだが、v-ifがfalseのときに完全にhtmlタグごと消えるのに対して、showはdisplay: noneを付与して消す。templateタグに対しては使えない。
+描画順として、まず表示させてから消すため描画速度が遅い。
+v-ifは逆にまるごと消すため頻繁にボタンなどで表示を切り替える場合は重くなる。
+なので頻繁に表示を切り替えるときはv-showを使う。
+- v-for...配列などをイテレートする。繰り返す対象にv-for="item in items"をつける。
+複数の要素をまとめて繰り返したいときはtemplateで囲んでtemplateにv-forを指定する
+基本的にv-forを使うときは予期しないバグを起こさないためにkey属性を付与するのがベスト。
+繰り返した各要素に対して一意の目印をつけたいときは、:key={item}などを繰り返す要素につける。
+key属性はtemplateに対しては使えないことに注意（レンダリングされないため）
+また、key属性にindexを指定してはいけない。
+
+## VueInstanceDetail
+
