@@ -152,3 +152,17 @@ DOM要素を模したJavascript用のオブジェクトを仮想DOMという。
 （破壊させる場合）
 - beforeDestoroyed()
 - destroyed()
+
+## VueCLI
+### VueCLIを導入する理由
+- ファイル分割
+- ビルドファイルの軽量化
+- Pluginが使える
+- HMRの使用
+- .vue、.ts、SCSS、PUG、ES6の使用
+
+### Install
+```
+$ vue install -g @vue/cli
+$ vue create project_name
+```
