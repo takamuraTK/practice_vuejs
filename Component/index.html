@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TemplateSyntax</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app1">
+        <my-component></my-component>
+        <my-component></my-component>
+        <my-component></my-component>
+    </div>
+
+    <div id="app2">
+        <my-component2></my-component2>
+    </div>
+
+    <script>
+        Vue.component('my-component', {
+            data: function () {
+                return {
+                    number: 12
+                }
+            },
+            template: '<p>いいね{{number}}</p>'
+        })
+
+        new Vue({
+            el: "#app1",
+        })
+
+        var component2 = {
+            data: function () {
+                return {
+                    number: 1
+                }
+            },
+            template: '<p>いいね{{number}}</p>'
+        }
+
+        new Vue({
+            el: "#app2",
+            components: {
+                'my-component2': component2
+            }
+        })
+    </script>
+</body>
+
+</html>

@@ -166,3 +166,156 @@ DOM要素を模したJavascript用のオブジェクトを仮想DOMという。
 $ vue install -g @vue/cli
 $ vue create project_name
 ```
+
+## Component
+コンポーネントとは再利用させるもの
+```
+<body>
+    <div id="app1">
+        <my-component></my-component>
+        <my-component></my-component>
+        <my-component></my-component>
+    </div>
+
+    <script>
+        Vue.component('my-component', {
+            data: function () {
+                return {
+                    number: 12
+                }
+            },
+            template: '<p>いいね{{number}}</p>'
+        })
+
+        new Vue({
+            el: "#app1",
+        })
+    </script>
+</body>
+```
+コンポーネントに任意の名前をつけ、そのタグを記述することで使える。
+
+### dataプロパティは関数を書く必要がある
+もし関数ではなくオブジェクトの場合、複数コンポーネントを使う場合に複数から同じオブジェクトが参照されることになる。
+そうなると区別のしようがないので関数を書く必要がある。
+
+上の書き方はグローバル登録で、全てのVueインスタンスで使えてしまう。
+制限するには下記のローカル登録で記述する。
+```
+var component2 = {
+    data: function () {
+        return {
+            number: 1
+        }
+    },
+    template: '<p>いいね{{number}}</p>'
+}
+
+new Vue({
+    el: "#app2",
+    components: {
+        'my-component2': component2
+    }
+})
+```
+
+### VueのImport
+上からわかるようにComponentとはオブジェクトである。
+main.jsにあるようなVueファイルのImportは
+```
+import App from './App.vue'
+```
+単一ファイルコンポーネントをImportしているが、これは単一ファイルコンポーネントをコンポーネントオブジェクト化したものをImportしている。
+
+### 単一ファイルコンポーネントのTemplate
+```
+<template>
+  <div>
+    <p>いいね！({{ number }})</p>
+    <button @click="increment">+1</button>
+  </div>
+</template>
+```
+必ず一つの要素に囲まれていなければいけない（上だとdivに囲まれている）
+
+### VueCLI上でのグローバル・ローカル登録
+#### グローバルコンポーネント
+main.js
+```
+import LikeNumber from './LikeNumber.vue'
+Vue.component('LikeNumber', LikeNumber)
+```
+
+#### ローカルコンポーネント
+App.vueのみで使いたい場合
+```
+import LikeHeader from "./LikeHeader.vue";
+export default {
+    components: {
+        LikeHeader,
+    },
+};
+```
+
+### VueCLIのstyleのスコープ
+単一ファイルコンポーネントのstyleタグ内にそのままCSSを指定すると、ページ全体に適応されてしまう。
+これを防ぐために
+```
+<style scoped>
+div {
+    border: 1px solid red;
+}
+</style>
+```
+scopedをつけるとそのコンポーネント内の要素に対してのみCSSを適応できる。
+
+### コンポーネント間のデータの受け渡し
+
+#### 親→子
+親側
+呼び出し部分に与える値を代入する。v-bindを使用してvueで定義したものをあげる
+属性名となるのでケバブケースで書くのが望ましい
+```
+<LikeNumber :total-number="number"></LikeNumber>
+```
+
+子側
+もらう値を配列としてpropsに登録する。
+キャメルケースで書くのが望ましい
+propsは配列ではなく型を定義してオブジェクトでも書ける。（これはバリデーションとなる。）
+```
+export default {
+    props: ["totalNumber"],
+};
+
+export default {
+    props: {
+        totalNumber: {
+            type: String,
+            required: true,
+        }
+    },
+};
+```
+propsで指定した値はvueインスタンス内でthis.値名でアクセス可能
+
+#### 子→親
+子側
+$emitを使用して名前をつけて、送る値を定義する。
+```
+methods: {
+    increment() {
+        this.$emit("my-click", this.number + 1);
+    },
+},
+```
+$emitは好きなタイミングでカスタムイベントを作成し、それを発火できるもの。
+属性名となるためカスタムイベント名はケバブケースで記述する。
+
+
+親側
+呼び出している箇所にv-onを使用して、カスタムイベントが実行されたときの処理を行う。
+$eventとして取り出せる。
+```
+<LikeNumber :number="number" @my-click="number = $event"></LikeNumber>
+```
