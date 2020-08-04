@@ -1,8 +1,22 @@
 <template>
   <div>
-    <h1>トータルのいいね</h1>
+    <slot name="title" :user="user"></slot>
+    <slot name="number"></slot>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      user: {
+        firstName: "Jack",
+        lastName: "Donald",
+      },
+    };
+  },
+};
+</script>
 
 <style scoped>
 div {

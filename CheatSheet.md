@@ -299,6 +299,69 @@ export default {
 ```
 propsで指定した値はvueインスタンス内でthis.値名でアクセス可能
 
+##### slot
+※HTMLごと送りたい場合
+親側
+```
+<LikeHeader>
+    <h1>トータルのいいね数</h1>
+    <h2>{{ number }}</h2>
+</LikeHeader>
+```
+子側
+```
+<template>
+    <div>
+        <slot></slot>
+    </div>
+</template>
+```
+slotを使うことで親側の好きなHTMLを子側に送ることができる。
+親側に書いたslotに埋め込まれるHTMLは、親側と子側両方からのCSSを適応させることができる。
+（両方に書いた場合親の方が優先される）
+また、slot内に何かしらのHTMLを予め書いておくと、親側でslotに対して指定されなかったとき、デフォルトとしてslot内のものが表示される。このことをフォールバックコンテンツという。
+
+- 複数のslotを使うとき
+親側
+templateタグで囲み、v-slotディレクティブで適応させたいslotのname属性を指定する。
+templateタグ以外だとエラーになるので注意。
+```
+<LikeHeader>
+    <template v-slot:title>
+        <h1>トータルのいいね数</h1>
+    </template>
+    <template v-slot:number>
+        <h2>{{ number }}</h2>
+    </template>
+</LikeHeader>
+```
+
+- 動的にslotを使いたいとき
+大括弧を用いる
+```
+v-slot:[title]
+```
+
+- slotの省略記法
+v-slot:は#にできる
+```
+<template #number>
+```
+
+子側
+```
+それぞれにslotに対してname属性を指定する。
+これを名前付きslotという。
+<template>
+    <div>
+        <slot name="title"></slot>
+        <slot name="number"></slot>
+    </div>
+</template>
+```
+名前を付けなかったslotはデフォルトslotといい、親要素でv-slotを持つtemplate外に書いたものが全て適応される。
+内部的にはVueがv-slot:defaultを生成してそこにtemplate外の要素を上から入れていくような形になる。
+
 #### 子→親
 子側
 $emitを使用して名前をつけて、送る値を定義する。
@@ -318,4 +381,75 @@ $emitは好きなタイミングでカスタムイベントを作成し、それ
 $eventとして取り出せる。
 ```
 <LikeNumber :number="number" @my-click="number = $event"></LikeNumber>
+```
+
+##### slotを用いた送信方法
+子側
+slotタグにv-bindを用いて任意の属性に、渡したいデータを入れる。
+```
+<template>
+    <div>
+        <slot name="title" :user="user"></slot>
+    </div>
+</template>
+
+<script>
+    export default {
+    data() {
+        return {
+        user: {
+            firstName: "Jack",
+            lastName: "Donald",
+        },
+        };
+    },
+};
+</script>
+```
+
+親側
+v-slotバインディングに任意の値を持たせて、それを出力することができる。
+名前はなんでもいい。
+```
+<LikeHeader>
+    <template v-slot:title="slotProps">
+        {{ slotProps }}
+    </template>
+</LikeHeader>
+```
+
+デフォルトslotで使う場合は下記のように省略記法がある。
+template内に書かず、:defaultを指定する必要もない
+```
+<LikeHeader v-slot="slotProps">
+```
+#を使う場合はちょっと特殊
+```
+<LikeHeader #default="slotProps">
+```
+
+### コンポーネントの動的切り替え
+componentタグを使う。
+下の例で言うとcurrentComponentを@clickなどで動的に変えることで表示されるコンポーネントを変化させたりできる。
+```
+<component :is="currentComponent"></component>
+```
+デフォルトだとcomponentで生成されたものを切り替えるたびにHTMLは再生成されるので、フォームなどの入力値は消えてしまう。
+それを防ぐためにはkeep-aliveで囲む
+```
+<keep-alive>
+    <component :is="currentComponent"></component>
+</keep-alive>
+```
+keep-aliveを使用したときに、表示・非表示のライフサイクルフックが存在する。
+activated()とdeactivated()で確認することができる。
+```
+export default {
+    activated() {
+        console.log("activated");
+    },
+    deactivated() {
+        console.log("deactivated");
+    },
+};
 ```
