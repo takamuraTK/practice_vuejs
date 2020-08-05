@@ -453,3 +453,65 @@ export default {
     },
 };
 ```
+
+## V-Model
+### v-modelの修飾子
+それぞれv-modelが発火するタイミングが違う
+- v-model.lazy...フォーカスが外れたときに反映される（いちいち反映させたくないときに使う）
+- v-model.number...インプット内の数値は通常Stringになってしまうが、それを防いでずっと数値型としてくれるもの。
+- v-model.trim...文頭と末尾の空白を削除する。
+
+### 複数のcheckboxを使うときのv-model
+単体のcheckboxを使うときはBoolを指定したが、複数の場合は配列を指定することで、その配列にValueが入る。
+
+### SelectBox
+```
+<select v-model="eventData.location">
+    <option v-for="location in locations" :key="location">{{ location }}</option>
+</select>
+<p>{{ eventData.location }}</p>
+
+export default {
+    data() {
+        return {
+            locations: ["東京", "大阪", "名古屋"],
+            eventData: {
+                location: "東京",
+            },
+        };
+    },
+```
+### v-modelの中身
+v-modelの中身は下記に等しい
+```
+<input :value="eventData.title" @input="eventData.title = $event.target.value" />
+```
+
+### コンポーネントでv-modelを使用する場合
+親側
+```
+<EventTitle v-model="eventData.title"></EventTitle>
+```
+v-modelの中身で説明すると、親側は下記のようなものになる。
+子側から$emitで送られたものは$eventで取り出せるので、eventData.titleにはそれを与えている。
+結果上記のv-modelを使用することで親側は子側のを受け取れる。
+```
+<EventTitle :input="eventData.title" @input="eventData.title = $event"></EventTitle>
+```
+
+子側
+```
+<template>
+    <div>
+        <input id="title" type="text" :value="value" @input="$emit('input', $event.target.value)" />
+        <p>{{ value }}</p>
+    </div>
+</template>
+
+<script>
+export default {
+    props: ["value"],
+};
+</script>
+
+```
