@@ -515,3 +515,108 @@ export default {
 </script>
 
 ```
+
+## CustomDirective
+### カスタムディレクティブを追加する
+1. main.jsにディレクティブを登録する
+borderの部分はディレクティブ名となり、v-ディレクティブ名となる名前を入れる。
+フック関数と呼ばれる引数を5つ取ることができ、全て必要ではなく、ディレクティブの挙動を定義するために使う。
+```
+Vue.directive("border", {
+    bind(el, binging, vnode) {
+        // ディレクティブが初めて対象の要素に紐付いたとき
+    },
+    inserted(el, binging, vnode) {
+        // 親Nodeに挿入されたとき
+    },
+    update(el, binging, vnode, oldVnode) {
+        // コンポーネントが更新される度、子コンポーネントが更新される前
+        // （親の更新の影響を受けて、子に更新が行く前ということ）
+    },
+    componentUpdated(el, binging, vnode, oldVnode) {
+        // コンポーネントが更新される度、子コンポーネントが更新された後
+    },
+    unbind(el, binging, vnode) {
+        // ディレクティブが紐付いている要素から取り除いたとき
+    },
+});
+```
+#### 省略記法
+フック関数は基本的にbindとupdateが主に使われるため、その2つには省略記法がある。
+また、bindとupdateは同じような処理を書くことが多い。
+そのため2つをまとめて1つの関数として定義する。
+（vnodeとoldVnodeも取れるがあまり使わないので記述していない）
+```
+Vue.directive("border", function(el, binging) {
+
+}
+});
+```
+
+#### ローカル登録
+上記のmain.jsに記述するのはグローバルに登録しているので、どのコンポーネントからも使える。
+特定のコンポーネントからのみ使えるようにするには、コンポーネント内で以下を書く。
+```
+<script>
+export default {
+    directives: {
+        border(el, binding) {
+            el.style.border = "solid black 2px";
+            el.style.borderWidth = binding.value.width;
+            el.style.borderColor = binding.value.color;
+            el.style.borderStyle = binding.arg;
+        },
+    },
+};
+</script>
+```
+
+#### elとbinding
+- el...ディレクティブが紐付いている要素を示す
+elを使ってjavascriptのDOM操作で要素を変えていく
+- binding...binding.valueでディレクティブの値を受け取れる。値に文字列を渡したいときは下記のように注意する。
+```
+<template>
+    <p v-border="'5px'">Home</p>
+</template>
+~~~~~~~~~~~~~~~~
+Vue.directive("border", function(el, binding) {
+    el.style.border = "solid black 2px"
+    el.style.borderWidth = binding.value
+}
+});
+
+複数の値を渡したいときはオブジェクトにする。
+<template>
+    <p v-border="{width: '5px', color: 'red'}">Home</p>
+</template>
+~~~~~~~~~~~~~~~~
+el.style.borderWidth = binding.value.width;
+el.style.borderColor = binding.value.color;
+```
+
+引数をとりたいとき
+binding.argで指定する
+```
+<p v-border:dotted="{width: '5px', color: 'red'}">Home</p>
+~~~~~~~~~~~~~~~~
+el.style.borderStyle = binding.arg;
+```
+
+修飾子（引数にドットで繋がっているやつ）をとりたいとき
+ifの条件式はそのままTrueかFalseを返す。修飾子はあるときとないときがあるからifであるときだけ変えるように設定する。
+```
+<p v-border:solid.round.shadow="{width: '5px', color: 'red'}">Home</p>
+~~~~~~~~~~~~~~~~
+Vue.directive("border", function (el, binding) {
+    if (binding.modifiers.round) {
+        el.style.borderRadius = "0.5rem"
+    }
+    if (binding.modifiers.shadow) {
+        el.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.26)"
+    }
+});
+```
+
+#### カスタムディレクティブ内ではthisは使えない
+thisを使ってdataなどの値を取ることはできないので注意する。
