@@ -226,6 +226,10 @@ main.jsにあるようなVueファイルのImportは
 import App from './App.vue'
 ```
 単一ファイルコンポーネントをImportしているが、これは単一ファイルコンポーネントをコンポーネントオブジェクト化したものをImportしている。
+また、vueCLIにおいてimport文は@を使うことでsrcからの相対パス的な使い方ができる。
+```
+import { tokyoNumber } from "@/tokyoNumber";
+```
 
 ### 単一ファイルコンポーネントのTemplate
 ```
@@ -620,3 +624,84 @@ Vue.directive("border", function (el, binding) {
 
 #### カスタムディレクティブ内ではthisは使えない
 thisを使ってdataなどの値を取ることはできないので注意する。
+
+## Filter and Mixin
+### Filter
+文字列をフォーマットしてくれるもの。わざわざcomputedを作る必要がない
+
+main.js
+```
+Vue.filter("upperCase", function(value) {
+    return value.toUpperCase();
+})
+```
+
+template内
+```
+<div>
+    <h2>{{ title | upperCase }}</h2>
+</div>
+```
+
+#### ローカルに登録する場合
+登録したいコンポーネントに以下を記述する。
+```
+filters: {
+    lowerCase(value) {
+        return value.toLowerCase();
+    }
+}
+```
+
+#### 複数のフィルターを連結させるとき
+さらにパイプを繋げる。左側から順に適応されていくので、下記はlowerCaseが適応された形になる。
+```
+<h2>{{ title | upperCase | lowerCase }}</h2>
+```
+
+#### フィルターではthisを使えない
+もし使いたいときはcomputedかmethodsを使う。
+
+#### computedとの違い
+methodsと同じく関係ない再描画の度に実行される。
+
+### Mixin
+コードの再利用をする。
+
+共通化したい部分をsrcフォルダの.jsファイルとして書く
+tokyoNumber.js
+```
+export const tokyoNumber = {
+  data() {
+    return {
+      title: "Welcome to Tokyo",
+      number: 0,
+    };
+  },
+  filters: {
+    lowerCase(value) {
+      return value.toLowerCase();
+    },
+  },
+};
+```
+
+使用したいコンポーネントでimportする。
+mixinsの配列でimportしたものを指定すると使えるようになる。
+```
+import { tokyoNumber } from "@/tokyoNumber";
+
+export default {
+  mixins: [tokyoNumber],
+};
+```
+コンポーネント側とmixin側で競合した場合はコンポーネントが優先される。
+
+#### グローバル化
+全てのVueインスタンスにMixinがマージされるので使用する際は注意して使う。
+main.jsに記述する。
+```
+Vue.mixin({
+    # ここに記述する
+})
+```

@@ -16,6 +16,9 @@ Vue.directive("border", function (el, binding) {
     el.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.26)"
   }
 });
+Vue.filter("upperCase", function (value) {
+  return value.toUpperCase();
+})
 
 new Vue({
   render: h => h(App),
