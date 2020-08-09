@@ -1,5 +1,6 @@
 <template>
   <div>
+    <Transition></Transition>
     <LikeHeader>
       <template v-slot:title="slotProps">
         <h1>トータルのいいね数</h1>
@@ -61,6 +62,7 @@ import LikeHeader from "./components/LikeHeader.vue";
 import About from "./components/About.vue";
 import Home from "./components/Home.vue";
 import EventTitle from "./components/EventTitle.vue";
+import Transition from "./components/Transition.vue";
 
 export default {
   data() {
@@ -85,6 +87,7 @@ export default {
     About,
     Home,
     EventTitle,
+    Transition,
   },
   methods: {
     incrementNumber(value) {

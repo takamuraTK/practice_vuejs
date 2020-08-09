@@ -705,3 +705,47 @@ Vue.mixin({
     # ここに記述する
 })
 ```
+
+## Transition and Animation
+### Transition
+transitionタグは基本的に中には一つの要素しか入れてはいけない。
+ただし最終的に出力されるのが一つという意味で、if文があって最終的に出力されるのが1つならば複数あってもよい。
+nameにfadeをつけることでstyleでfadeのタイミングとイベントを調整できる
+実際内部ではそのアクションが行われたときにfade-enterなどのクラスをつけたり外したりして調整している。
+```
+<div>
+    <button @click="show = !show">change</button>
+    <transition name="fade">
+        <p v-if="show">hello</p>
+    </transition>
+</div>
+
+<style scoped>
+.fade-enter {
+  /* 現れるときの最初の状態 */
+  opacity: 0;
+}
+.fade-enter-active {
+  /* 現れるときのトランジションの状態 */
+  transition: opacity 0.5s;
+}
+.fade-enter-to {
+  /* 現れるときの最後の状態 */
+  opacity: 1;
+}
+.fade-leave {
+  /* 消えるときの最初の状態 */
+  opacity: 1;
+}
+.fade-leave-active {
+  /* 消えるときのトランジションの状態 */
+  transition: opacity 0.5s;
+}
+.fade-leave-to {
+  /* 消えるときの最後の状態 */
+  opacity: 0;
+}
+</style>
+```
+
+Transition and Animationの以降一旦pass
