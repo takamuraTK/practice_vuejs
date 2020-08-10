@@ -749,3 +749,389 @@ nameにfadeをつけることでstyleでfadeのタイミングとイベントを
 ```
 
 Transition and Animationの以降一旦pass
+
+## Router
+vue-routerのインストール
+```
+$ npm install vue-router
+```
+
+RouterとはURLと表示するページを関連付けるもの、SPAに使われる。
+設定をmain.jsと同じディレクトリにrouter.jsを作成して記述する。main.jsに書いてもいいが、長くなるのでこうやって分割しておく。
+
+router.js
+```
+import Vue from 'vue'
+import Router from 'vue-router'
+import Home from './views/Home.vue'
+import Users from './views/Users.vue'
+
+Vue.use(Router)
+// useはプラグインを適応させる。プラグインとはVueプロジェクトに対してグローバルで使えるものを指す。
+export default new Router({
+  routes: [
+    { path: '/', component: Home },
+    { path: '/users', component: Users }
+  ]
+})
+```
+
+routerで使用するページを./viewsフォルダを作成し、そこにVueファイルを作成してRouterでインポートしていく。
+当然main.jsで適応させる必要がある。
+```
+import router from './router.js'
+
+new Vue({
+  router,
+  render: h => h(App),
+}).$mount('#app')
+```
+vueインスタンスにrouterを登録している
+（省略記法を使っているので実際書いているのはrouter: routerとなる。）
+
+実際にルーティングを適応させるには表示されるVueであるApp.vueにRouterを読み込ませる。
+App.vue
+```
+<template>
+  <div>
+    <router-view></router-view>
+  </div>
+</template>
+```
+router-viewは動的コンポーネントのような振る舞いをする。
+なので内部的にはURLを変えることによってJS側で表示する内容を変えており、サーバー側で変えたりはしていない。
+
+### シャープについて
+上記の方法でページを変えるとURLにシャープがつく。
+これはSPAである証拠で、実際にはlocalhost:8080にアクセスしているだけで、シャープ以降の文字列によってコンポーネントを変化させているという意味になる。
+
+### Historyモード
+シャープを消す方法がある。それがHistoryモードであって、今まではHashモードとなっている。
+router.js
+```
+export default new Router({
+  mode: "history",
+  routes: [
+    { path: '/', component: Home },
+    { path: '/users', component: Users }
+  ]
+})
+```
+すると、URLとしてはlcalhost:8080/usersなどにアクセスしているが、Vue側は/usersであってもindex.htmlを返すようになる。
+（静的ホスティングサービスを利用するときは/usersなどにアクセスしたらindex.jsを返すみたいな設定は自分で書く必要がある。）
+設定例：https://router.vuejs.org/ja/guide/essentials/history-mode.html
+
+### router-link
+普通にaタグでページ内のリンクを作るといちいちアクセスし直すことになる。
+変化した部分だけ変化させれば1番効率的。
+```
+<router-link to="/">Home</router-link>
+<router-link to="/users">Users</router-link>
+```
+router-linkを使うことで変化したところだけを変化させる。
+デフォルトだと出力後はaタグになっており、buttonなどにしたい場合はtagを指定する。
+```
+<router-link to="/" tag="button">Home</router-link>
+```
+
+#### active-class
+現在のページがrouterリンクのページのときに、特定のスタイルを適応させたいときに使う。
+```
+<router-link to="/" class="link" active-class="link--active">Home</router-link>
+<style>
+  .link--active {
+    font-size: 20px;
+  }
+</style>
+```
+上のままだと、現在のURLに内包される全ての親Pathも適応されてしまうので、厳密にそのURLだけに適応させたいときはexactを使う
+```
+<router-link to="/" class="link" active-class="link--active" exact>Home</router-link>
+```
+
+#### router-linkを使わないでJsでRouterリンクを作る方法
+```
+<template>
+  <div>
+    <h3>Home</h3>
+    <button @click="toUsers">Go to Users</button>
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    toUsers() {
+      this.$router.push("/users");
+    },
+  },
+};
+</script>
+```
+
+### 動的なURLを作る
+router設定に任意のサフィックスを書く
+```
+routes: [
+    { path: '/', component: Home },
+    { path: '/users/:id', component: Users }
+  ]
+```
+この時点で任意のサフィックスを付与したURLにはアクセスできる。
+
+ページの内容をこの場合だと:idに応じて変化させるには$routeを使う
+（$routerではないことに注意、$routeは現在の情報を取得するときにつかう）
+```
+<h1>User No. {{ $route.params.id }}</h1>
+```
+パラメーターの変化はコンポーネントを使いまわして行っているので、変化時にライフサイクルフックが呼ばれないことに注意する
+
+#### propsを使って再利用性を高める
+router.jsにて
+```
+{ path: '/users/:id', component: Users, props: true }
+```
+propsをtrueにし、使う場所で
+```
+<h1>User No. {{ id }}</h1>
+
+<script>
+export default {
+  props: ["id"],
+};
+</script>
+```
+こうすることで、違うところでこのコンポーネントを使いたいときに再利用できる。（コンポーネントはRouter関係なくなっているので）
+
+### ネストしたURLを作る
+pathの部分は/pathとしてしまうと、childrenとしてネストできないので付けないもしくは最後につける。
+```
+import UsersPosts from './views/UsersPosts.vue'
+import UsersProfile from './views/UsersProfile.vue'
+
+export default new Router({
+  mode: "history",
+  routes: [
+    { path: '/', component: Home },
+    {
+      path: '/users/:id',
+      component: Users,
+      props: true,
+      children: [
+        { path: "posts/", component: UsersPosts },
+        { path: "profile/", component: UserProfile }
+      ]
+    }
+  ]
+})
+```
+
+### toを動的に利用する
+:toをつかう
+```
+<router-link :to="'/users/' + (Number(id) + 1) + '/profile'">次のユーザー</router-link>
+```
+
+nameを使用したPathに対しては以下のように書ける
+```
+<router-link :to="{ name: 'users-id-profile', params: {id: Number(id) + 1}}">次のユーザー</router-link>
+```
+router.js
+```
+{ path: "profile/", component: UsersProfile, name: 'users-id-profile' }
+```
+
+この指定方法はpush内でも使えたりする
+```
+<script>
+export default {
+  methods: {
+    toUsers() {
+      this.$router.push({
+        name: "users-id-profile",
+        params: { id: 1 },
+      });
+    },
+  },
+};
+</script>
+```
+
+queryも指定できる
+```
+:to="{ name: 'users-id-profile', params: {id: Number(id) + 1}, query: {lang: 'ja'}}"
+```
+
+### 名前付きビュー
+固定ヘッダーなどによく使うことができる
+
+componentをcomponentsにして、defaultとheaderで使うコンポーネントを指定する。(headerは次の項目で定義した)
+名前付きビューを使うときはpropsをオブジェクトとして定義することに注意する。
+router.js
+```
+import HeaderHome from './views/HeaderHome.vue'
+import HeaderUsers from './views/HeaderUsers.vue'
+
+export default new Router({
+  mode: "history",
+  routes: [
+    {
+      path: '/',
+      components: {
+        default: Home,
+        header: HeaderHome
+      }
+    },
+    {
+      path: '/users/:id',
+      components: {
+        default: Users,
+        header: HeaderUsers
+      },
+      props: {
+        default: true,
+        header: false
+      },
+      children: [
+        { path: "posts/", component: UsersPosts },
+        { path: "profile/", component: UsersProfile, name: 'users-id-profile' }
+      ]
+    }
+  ]
+})
+```
+
+router-viewでnameを指定して呼び出す
+```
+<router-view name="header"></router-view>
+```
+
+### リダイレクトの使い方
+```
+{
+  path: "/hello",
+  redirect: { path: "/"},
+}
+```
+pathに*を指定すると、定義されていないURLに対して全て定義できるので便利
+よく使うらしい
+```
+{
+  path: '*',
+  redirect: '/'
+}
+```
+
+### 特定のIDを持つ要素までスクロールさせる
+特定のIDの要素までスクロールさせるには、ブラウザ上の使用としてURLに#idを付けてあげればそこまでスクロールしてくれる。
+ただし、Vueの場合はスクロールの振る舞いを指定してあげないと、スクロールしてくれない。
+scrollBehavior関数を使って定義する。
+selectorを使うことでid指定でその要素まで飛ばせる
+```
+export default new Router({
+  mode: "history",
+  routes: [
+    ~~~~~~~~~~~~~~~~~
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    return {
+      selector: '#next-user'
+    };
+  }
+})
+```
+
+to, from, savedPositionの3つの引数を取ることができ、
+toは遷移先のページ情報があり、fromは遷移前のページ情報があり、
+savedPositionはページから別のページに行き、そのページから最初のページに戻ったときに、スクロール場所を保持するときに使う
+
+```
+scrollBehavior(to, from, savedPosition) {
+  if (savedPosition) {
+    return savedPosition;
+  }
+}
+```
+
+ただし、これは一瞬でページが切り替わるときのみであり、Transitionを指定していたときなどすぐにページが切り替わらないときは別途指定が必要
+発展なので割愛
+
+### ナビゲーションガード
+ページ遷移の際に特定の処理を挟むことをいう。
+
+#### グローバルに実装
+beforeEachを使う
+to,fromは遷移先、遷移前のページ情報
+nextはnext();として次のページに行くという処理を書く必要がある。
+next(false);で遷移しない、next({path: ---});でnamedパス指定でとばせたりする。
+main.js
+```
+router.beforeEach((to, from, next) => {
+  next();
+})
+```
+
+#### ローカルに実装
+##### router.jsに指定
+beforeEnterを使う
+beforeEachと変わらない
+```
+{
+  path: '/',
+  components: {
+    default: Home,
+    header: HeaderHome
+  },
+  beforeEnter(to, from, next) {
+    next();
+  }
+},
+```
+##### コンポーネントに指定する
+コンポーネントで使用するメリットはthisが使える
+3つ関数がある
+BeforeRouteEnterではthisは基本的に使えないが特殊な書き方で使える
+Vueインスタンスが生成されて、thisが使えるようになったときの処理をnext内に書くことができる
+```
+<script>
+export default {
+  props: ["id"],
+  beforeRouteEnter(to, from, next) {
+    // Vueインスタンスが作成される前の処理を書くことができる
+    next((vm) => {
+      console.log(vm.id);
+    });
+  },
+  beforeRouteUpdate(to, from, next) {
+    // URLが変わったけどVueインスタンスが変わらない、ネストされたページに入ったときに使う
+    next();
+  },
+  beforeRouteLeave(to, from, next) {
+    // ページを離れたときに使う
+    next();
+  },
+};
+</script>
+```
+
+### 遅延ローディング
+コンポーネントが多数になると、読み込むファイルの数が多くなり、SPAだと最初に全てのファイルを持ってくるため読み込みが遅くなる。
+これを防ぐためにWebpack側の機能を使って、必要なファイルだけ読み込むことができる。
+基本的にこの書き方をするのが望ましい。
+
+router.js
+```
+import Home from './views/Home.vue'
+```
+となっていたものを
+```
+const Home = () => import('./views/Home.vue');
+```
+とする。
+
+ただしVueCLI3ではPrefetchという機能があり、これは次のページに必要なファイルをDLするというもの。
+これがあるせいで効果がないように見えるがPrefetchはインターネット通信の手が空いているときに行われるため
+（例えばリクエストを送ってレスポンスを待っているときなど）
+効率的な通信で実現されている。それはブラウザのキャッシュに保持しておき、使用する際はそこから参照することでページを表示させている。
+
+
