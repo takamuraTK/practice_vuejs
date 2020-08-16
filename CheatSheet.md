@@ -1135,3 +1135,195 @@ const Home = () => import('./views/Home.vue');
 効率的な通信で実現されている。それはブラウザのキャッシュに保持しておき、使用する際はそこから参照することでページを表示させている。
 
 
+## Vuex
+### 初期設定
+コンポーネント間のデータの受け渡しにVuexが仲介し、スムーズにするもの。
+プロジェクトに移動し、インストール
+```
+$ npm instal vuex
+```
+
+main.jsと同じディレクトリにstore.jsを作成し、ここに設定を書く。
+store.js
+```
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+    state: {
+        count: 2
+    }
+})
+
+```
+
+main.jsで有効化する
+```
+import store from './store.js'
+
+new Vue({
+  store,
+  router,
+  render: h => h(App),
+}).$mount('#app')
+```
+
+これで全てのコンポーネントからstateのcountにアクセスすることができるようになった。
+
+### 基本的な使用例
+computedで呼ぶのが望ましい
+```
+<template>
+  <div>
+    <p>{{ count }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    count() {
+      return this.$store.state.count;
+    },
+  },
+};
+</script>
+```
+
+### getter
+共通して使えるちょっとした関数を定義するときに便利
+
+store.js
+```
+export default new Vuex.Store({
+    state: {
+        count: 2
+    },
+    getters: {
+        doubleCounter: state => state.count * 2
+    }
+})
+```
+
+使う側
+```
+<template>
+  <div>
+    <h3>Home</h3>
+    <button @click="toUsers">Go to Users</button>
+    <p>{{ count }}</p>
+    <p>{{ doubleCounter }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    count() {
+      return this.$store.state.count;
+    },
+    doubleCounter() {
+      return this.$store.getters.doubleCounter;
+    },
+  },
+  .....
+```
+
+getterはmapGettersを使って簡潔に書ける
+...はスプレッド演算子でオブジェクト内にオブジェクトをマージさせている
+```
+<script>
+import { mapGetters } from "vuex";
+export default {
+  computed: {
+    count() {
+      return this.$store.state.count;
+    },
+    ...mapGetters(["doubleCounter"]),
+  },
+```
+
+### mutation
+上記のような書き方でcomputedなどに色々書いていると、値を変えているのか参照しているのかがわからない。
+Vuexでは基本的に値を変える処理はmutationに書くのが望ましい。
+mutationの処理はふつう同期的な処理しか書くべきではない、非同期的な処理にすると煩雑になってしまうから。
+
+store.js
+```
+export default new Vuex.Store({
+    state: {
+        count: 2
+    },
+    mutations: {
+        increment(state, number) {
+            state.count += number
+        }
+    }
+})
+```
+
+使う側
+```
+methods: {
+  increment() {
+    this.$store.commit("increment", 2);
+  }
+}
+```
+gettersと同様に省略記法がある
+引数はHTML側に書く
+```
+<button @click="increment(2)">
+
+import { mapMutations } from "vuex";
+........
+
+methods: {
+  ...mapMutations(["increment"])
+}
+```
+
+## action
+mutationに対してactionがあり、こちらは非同期的な処理を書くべき場所
+下記のようなmutationをactionで呼んで、そのactionを呼び出すこともできる。
+actionを挟むのか挟まないのかはプロジェクトの方針次第
+
+store.js
+```
+export default new Vuex.Store({
+  actions: {
+      increment(context) {
+          context.commit('increment');
+      }
+  }
+})
+```
+
+使う側
+```
+methods: {
+  increment() {
+    this.$store.dispatch("increment", 2)
+  }
+}
+```
+
+gettersと同様に省略記法がある
+引数はHTML側に書く
+```
+<button @click="increment(2)">
+
+import { mapActions } from "vuex";
+........
+
+methods: {
+  ...mapActions(["increment"])
+}
+```
+
+以降のVuexは割愛
+
+
+##
