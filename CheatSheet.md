@@ -1326,4 +1326,81 @@ methods: {
 以降のVuexは割愛
 
 
-##
+## axios
+### install
+```
+$ npm install axios
+```
+
+### post
+第一引数にURL、第二引数に送る情報（下記はFirebaseの形式）
+
+```
+<script>
+import axios from "axios";
+
+export default {
+  methods: {
+    createComment() {
+      axios.post(
+        "https://firestore.googleapis.com/v1/projects/PROJECT_NAME/databases/(default)/documents/comments",
+        {
+          fields: {
+            name: {
+              stringValue: this.name,
+            },
+            comment: {
+              stringValue: this.comment,
+            },
+          },
+        }
+      );
+    },
+  },
+};
+</script>
+```
+
+### get
+第一引数にURLを指定する。
+
+axiosはpromiseという非同期用のデータを返す。
+そのためgetしたデータを取得するにはthenを使う。
+
+```
+  data() {
+    return {
+      name: "",
+      comment: "",
+      posts: [],
+    };
+  },
+  created() {
+    axios
+      .get(
+        "https://firestore.googleapis.com/v1/projects/PROJECT_NAME/databases/(default)/documents/comments"
+      )
+      .then((response) => {
+        this.posts = response.data.documents;
+      });
+  },
+```
+
+### baseurl
+main.jsにbaseurlを設定することで、APIのURLの共通部分をカットできる
+main.js
+```
+import axios from 'axios'
+
+axios.defaults.baseURL = 'https://firestore.googleapis.com/v1/projects/PROJECT_NAME/databases/(default)/documents'
+```
+
+```
+created() {
+  axios.get("/comments").then((response) => {
+    this.posts = response.data.documents;
+  });
+},
+```
+
+以下Axios省略
